@@ -1,0 +1,86 @@
+version: "1.0"
+name: "Backend Developer Policy"
+description: "Security rules for Backend Developer onboarding sessions"
+
+rules:
+  - name: "block_prod_db_write_junior_mid"
+    priority: 1
+    match:
+      resource:
+        - "db_prod_write"
+        - "production_database_write"
+      session_seniority:
+        - junior
+        - mid
+    action: DENY
+    message: "Junior/mid backend devs cannot write to production database"
+    notify: "engineering-manager"
+    severity: CRITICAL
+
+  - name: "block_prod_deploy_junior"
+    priority: 2
+    match:
+      resource: "production_deploy"
+      session_seniority: "junior"
+    action: DENY
+    message: "Junior developers cannot deploy to production"
+    severity: HIGH
+
+  - name: "requires_approval_prod_deploy_mid"
+    priority: 3
+    match:
+      resource: "production_deploy"
+      session_seniority: "mid"
+    action: HUMAN_REVIEW
+    reviewer: "senior-backend"
+    timeout_minutes: 60
+    severity: HIGH
+
+  - name: "block_prod_secrets_junior"
+    priority: 4
+    match:
+      content_contains:
+        - "production secret"
+        - "prod API key"
+        - "prod database password"
+        - "prod connection string"
+      session_seniority: "junior"
+    action: DENY
+    severity: HIGH
+
+  - name: "redact_pii"
+    priority: 5
+    match:
+      has_pii: true
+      pii_types:
+        - email
+        - phone
+        - ssn
+        - credit_card
+        - address
+    action: REDACT
+    replacement: "[REDACTED-PII]"
+    severity: MEDIUM
+
+  - name: "block_db_staging_write_junior"
+    priority: 6
+    match:
+      resource: "db_staging_write"
+      session_seniority: "junior"
+    action: DENY
+    message: "Junior backend devs have read-only staging DB access"
+    severity: MEDIUM
+
+  - name: "log_confidential_disclosure"
+    priority: 7
+    match:
+      intent_category: "confidential_disclosure"
+    action: LOG
+    severity: HIGH
+
+  - name: "log_all_access_requests"
+    priority: 10
+    match:
+      event_type: "access_request"
+    action: LOG
+    severity: LOW

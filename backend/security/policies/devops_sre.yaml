@@ -1,0 +1,90 @@
+version: "1.0"
+name: "DevOps/SRE Policy - STRICT"
+description: "Maximum security rules for infrastructure access"
+
+rules:
+  - name: "block_prod_for_mid_first_14_days"
+    priority: 1
+    match:
+      resource: "aws_prod"
+      session_seniority:
+        - junior
+        - mid
+    action: DENY
+    message: "Production AWS access blocked. Requires 14+ days tenure and senior approval."
+    notify: "engineering-manager"
+    severity: CRITICAL
+
+  - name: "block_prod_secrets"
+    priority: 2
+    match:
+      content_contains:
+        - "production secrets"
+        - "prod API keys"
+        - "KMS prod"
+        - "prod private key"
+        - "production credentials"
+        - "vault prod"
+    action: DENY
+    severity: CRITICAL
+
+  - name: "human_review_infra_write"
+    priority: 3
+    match:
+      resource_type: "infrastructure"
+      action_type: "write"
+    action: HUMAN_REVIEW
+    reviewer: "senior-devops"
+    timeout_minutes: 30
+    severity: HIGH
+
+  - name: "block_prod_kubernetes"
+    priority: 4
+    match:
+      resource: "kubernetes_prod"
+      session_seniority:
+        - junior
+        - mid
+    action: DENY
+    severity: CRITICAL
+
+  - name: "block_pagerduty_junior_mid"
+    priority: 5
+    match:
+      resource: "pagerduty_oncall"
+      session_seniority:
+        - junior
+        - mid
+    action: DENY
+    message: "On-call access requires senior approval and 30+ days tenure"
+    severity: HIGH
+
+  - name: "redact_pii_in_runbooks"
+    priority: 6
+    match:
+      has_pii: true
+      pii_types:
+        - email
+        - phone
+        - api_key
+        - password
+    action: REDACT
+    replacement: "[REDACTED]"
+    severity: MEDIUM
+
+  - name: "human_review_prod_staff"
+    priority: 7
+    match:
+      resource_type: "production"
+      session_seniority: "staff"
+    action: HUMAN_REVIEW
+    reviewer: "head-of-infrastructure"
+    timeout_minutes: 120
+    severity: HIGH
+
+  - name: "log_all_access_requests"
+    priority: 10
+    match:
+      event_type: "access_request"
+    action: LOG
+    severity: MEDIUM

@@ -1,0 +1,100 @@
+version: "3.9"
+# Production overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Changes from dev:
+#   - No code volume mounts (no hot reload)
+#   - restart: always on all services
+#   - No .env file — secrets injected via environment or Docker secrets
+#   - Only ports 80/443 exposed externally (reverse proxy handles SSL)
+
+services:
+  db:
+    restart: always
+    # No port exposure — accessible only within the Docker network
+    ports: []
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-techonboard}
+      POSTGRES_USER: ${POSTGRES_USER:-techonboard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in production}
+
+  redis:
+    restart: always
+    # No port exposure — accessible only within the Docker network
+    ports: []
+
+  backend:
+    restart: always
+    # No code volume mount — use built image
+    volumes:
+      - repo_cache:/tmp/repos
+    # No .env file — environment injected externally
+    env_file: []
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:?GOOGLE_API_KEY is required}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:?GITHUB_TOKEN is required}
+      GITHUB_ORG: ${GITHUB_ORG:?GITHUB_ORG is required}
+      JIRA_URL: ${JIRA_URL}
+      JIRA_EMAIL: ${JIRA_EMAIL}
+      JIRA_API_TOKEN: ${JIRA_API_TOKEN}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_WORKSPACE_ID: ${SLACK_WORKSPACE_ID}
+      X402_WALLET_ADDRESS: ${X402_WALLET_ADDRESS}
+      X402_PRICE_JUNIOR: ${X402_PRICE_JUNIOR:-0.50}
+      X402_PRICE_MID_SENIOR: ${X402_PRICE_MID_SENIOR:-1.00}
+      X402_PRICE_STAFF: ${X402_PRICE_STAFF:-2.00}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      LOBSTER_TRAP_URL: ${LOBSTER_TRAP_URL:-http://lobster-trap:8080}
+      LOBSTER_TRAP_POLICY_DIR: ${LOBSTER_TRAP_POLICY_DIR:-/app/security/policies}
+      ENVIRONMENT: production
+    # Production server — no --reload flag
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+    # No direct port exposure — behind reverse proxy
+    ports: []
+
+  celery_worker:
+    restart: always
+    # No code volume mount
+    volumes: []
+    env_file: []
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:?GOOGLE_API_KEY is required}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      JIRA_URL: ${JIRA_URL}
+      JIRA_EMAIL: ${JIRA_EMAIL}
+      JIRA_API_TOKEN: ${JIRA_API_TOKEN}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      LOBSTER_TRAP_URL: ${LOBSTER_TRAP_URL:-http://lobster-trap:8080}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      ENVIRONMENT: production
+
+  frontend:
+    restart: always
+    # No port exposure — behind reverse proxy
+    ports: []
+
+  reverse-proxy:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  repo_cache:

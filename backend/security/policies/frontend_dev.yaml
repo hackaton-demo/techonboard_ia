@@ -1,0 +1,71 @@
+version: "1.0"
+name: "Frontend Developer Policy"
+description: "Security rules for Frontend Developer onboarding sessions"
+
+rules:
+  - name: "block_prod_api_keys_junior"
+    priority: 1
+    match:
+      resource: "prod_api_keys"
+      session_seniority: "junior"
+    action: DENY
+    message: "Junior frontend devs cannot access production API keys. Use staging keys only."
+    notify: "engineering-manager"
+    severity: HIGH
+
+  - name: "block_prod_api_keys_mid"
+    priority: 2
+    match:
+      resource: "prod_api_keys"
+      session_seniority: "mid"
+    action: DENY
+    message: "Mid frontend devs cannot access production API keys. Use staging keys only."
+    severity: HIGH
+
+  - name: "requires_approval_prod_deploy"
+    priority: 3
+    match:
+      resource: "prod_deploys"
+      session_seniority: "senior"
+    action: HUMAN_REVIEW
+    reviewer: "frontend-lead"
+    timeout_minutes: 60
+    severity: MEDIUM
+
+  - name: "block_staging_deploy_junior"
+    priority: 4
+    match:
+      resource: "staging_deploys"
+      session_seniority: "junior"
+    action: HUMAN_REVIEW
+    reviewer: "mid-frontend"
+    timeout_minutes: 30
+    message: "Junior frontend devs need approval for staging deployments"
+    severity: LOW
+
+  - name: "redact_pii"
+    priority: 5
+    match:
+      has_pii: true
+      pii_types:
+        - email
+        - phone
+        - address
+        - full_name
+    action: REDACT
+    replacement: "[REDACTED-PII]"
+    severity: MEDIUM
+
+  - name: "log_design_system_access"
+    priority: 6
+    match:
+      resource_type: "design_system"
+    action: LOG
+    severity: LOW
+
+  - name: "log_all_access_requests"
+    priority: 10
+    match:
+      event_type: "access_request"
+    action: LOG
+    severity: LOW

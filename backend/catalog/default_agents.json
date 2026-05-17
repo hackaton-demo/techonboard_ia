@@ -1,0 +1,439 @@
+{
+  "agents": [
+    {
+      "id": "qa-engineer",
+      "name": "QA Engineer",
+      "icon": "🧪",
+      "category": "qa",
+      "seniority_levels": ["junior", "mid", "senior"],
+      "stack_keywords": ["playwright", "cypress", "selenium", "testrail", "pytest", "jest"],
+      "tools": {
+        "testing_e2e": ["Playwright", "Cypress", "Selenium", "WebdriverIO"],
+        "api_testing": ["Postman", "REST Assured", "SuperTest"],
+        "test_management": ["TestRail", "Xray", "Zephyr"],
+        "ci_integration": ["GitHub Actions", "Jenkins"],
+        "cross_browser": ["BrowserStack", "Sauce Labs"],
+        "performance": ["k6", "JMeter"]
+      },
+      "access_rules": {
+        "junior": {
+          "github_repos": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#qa", "#general"],
+          "staging_env": "auto",
+          "browserstack": "requires_approval",
+          "production": "blocked"
+        },
+        "mid": {
+          "github_repos": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#qa", "#releases", "#bugs-critical"],
+          "staging_env": "auto",
+          "browserstack": "auto",
+          "testrail": "auto",
+          "production": "blocked"
+        },
+        "senior": {
+          "github_repos": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#qa", "#releases", "#bugs-critical", "#deployments"],
+          "staging_env": "auto",
+          "browserstack": "auto",
+          "ci_config": "auto",
+          "production": "requires_approval"
+        }
+      },
+      "learning_sequence": [
+        "Team testing strategy: pyramid (unit/integration/E2E)",
+        "How to run the E2E suite locally: exact command and environment variables",
+        "Critical flows that must never break: login, registration, checkout",
+        "Test naming conventions and describe/it block organization",
+        "Bug reporting process in Jira: severity levels and how to attach evidence",
+        "Test code review process: who to pair test with"
+      ],
+      "ticket_criteria": {
+        "junior": "Simple happy path E2E flow using the team's existing framework. Should not touch CI or configuration. Estimated time: 4-6 hours.",
+        "mid": "E2E test of a complete business flow including edge cases. May require adding a helper or fixture. Estimated time: 6-10 hours.",
+        "senior": "Design and implement the testing strategy for a new feature. Includes deciding what test levels are needed. Estimated time: 1-2 days."
+      },
+      "interview_questions": {
+        "stack_detection": "What E2E testing framework do you have the most experience with — Playwright, Cypress, Selenium, or another?",
+        "depth": "Have you written API tests in addition to E2E? Which tools have you used?",
+        "gap_detection": "The team uses {team_stack}. Have you worked with that before?",
+        "learning_style": "How do you prefer to learn something new — reading docs, looking at code, or jumping straight in?",
+        "expectations": "What do you hope to have accomplished in your first 30 days as a QA here?",
+        "adaptive": "How long do you think you would need to get up to speed with {missing_tool}?"
+      },
+      "lobster_trap_policy_file": "qa_engineer.yaml",
+      "system_prompt_template": "You are the onboarding agent specialized in QA Engineering for {company_name}.\n\nYour goal is two things simultaneously in a single natural conversation:\n1. Make the new QA feel welcome and comfortable\n2. Detect their real stack, level, and gaps to personalize their onboarding\n\nTeam tools: {tools}\nTeam stack: {team_stack}\nExpected level: {seniority}\n\nAsk at most 6 adaptive questions about E2E testing, APIs, tools, and expectations.\nAt the end, generate a JSON with stack_actual, stack_gaps, nivel_real_detectado, estilo_aprendizaje, expectativas, areas_enfasis, ticket_complexity, notas_para_manager."
+    },
+    {
+      "id": "devops-sre",
+      "name": "DevOps / SRE",
+      "icon": "🚀",
+      "category": "ops",
+      "seniority_levels": ["mid", "senior", "staff"],
+      "stack_keywords": ["terraform", "kubernetes", "docker", "github-actions", "datadog", "pagerduty"],
+      "tools": {
+        "iac": ["Terraform", "Pulumi", "CloudFormation", "Ansible"],
+        "containers": ["Docker", "Kubernetes", "Helm", "ArgoCD"],
+        "cicd": ["GitHub Actions", "Jenkins", "CircleCI", "GitLab CI"],
+        "observability": ["Datadog", "Prometheus", "Grafana", "PagerDuty", "New Relic"],
+        "cloud": ["AWS", "GCP", "Azure"],
+        "secrets": ["HashiCorp Vault", "AWS Secrets Manager", "GCP Secret Manager"]
+      },
+      "access_rules": {
+        "mid": {
+          "github_repos_infra": "auto",
+          "aws_staging_read": "auto",
+          "datadog_read": "auto",
+          "slack_channels": ["#infra", "#incidents-staging"],
+          "kubernetes_staging": "requires_approval",
+          "aws_staging_write": "requires_approval",
+          "aws_prod": "blocked",
+          "secrets_prod": "blocked",
+          "pagerduty_oncall": "blocked"
+        },
+        "senior": {
+          "github_repos_infra": "auto",
+          "aws_staging_read": "auto",
+          "aws_staging_write": "auto",
+          "datadog_read": "auto",
+          "kubernetes_staging": "auto",
+          "slack_channels": ["#infra", "#incidents-staging", "#deployments"],
+          "aws_prod_read": "requires_approval",
+          "aws_prod_write": "blocked",
+          "secrets_prod": "blocked",
+          "pagerduty_oncall": "requires_approval"
+        },
+        "staff": {
+          "github_repos_infra": "auto",
+          "aws_staging": "auto",
+          "aws_prod_read": "auto",
+          "datadog": "auto",
+          "kubernetes_staging": "auto",
+          "kubernetes_prod": "requires_approval",
+          "slack_channels": ["#infra", "#incidents", "#deployments", "#oncall"],
+          "pagerduty_oncall": "auto",
+          "secrets_prod": "requires_approval"
+        }
+      },
+      "learning_sequence": [
+        "Cloud architecture diagram: VPCs, subnets, main services",
+        "How the CI/CD pipeline works: from merge to staging deploy",
+        "Runbooks for the most common incidents: the 5 most frequent from last month",
+        "Team Terraform conventions: module structure, naming, state management",
+        "On-call process: tools, escalation, post-mortems",
+        "Gradual production access: buddy system protocol for the first 14 days"
+      ],
+      "ticket_criteria": {
+        "mid": "Observability task in staging: add a Datadog alert or review/improve an existing dashboard. No infra modification. Time: 4-8 hours.",
+        "senior": "Add a small Terraform module in staging: a security group, an S3 bucket with policies, or similar. Requires senior PR review. Time: 1 day.",
+        "staff": "Review and document the high-availability architecture of a critical service. Identify improvements and propose a plan. Time: 2-3 days."
+      },
+      "interview_questions": {
+        "stack_detection": "Which cloud provider do you have the most experience with — AWS, GCP, or Azure? And which IaC tool?",
+        "depth": "Have you managed Kubernetes clusters in production or mainly in staging/dev?",
+        "gap_detection": "The team uses {team_stack}. Have you worked with that before?",
+        "learning_style": "Do you prefer to understand the overall architecture first or dive straight into the most critical systems?",
+        "expectations": "Which areas of DevOps do you feel you have the most room to grow in?",
+        "adaptive": "For {missing_tool}, how long do you estimate you would need to feel comfortable using it in staging?"
+      },
+      "lobster_trap_policy_file": "devops_sre.yaml",
+      "system_prompt_template": "You are the onboarding agent specialized in DevOps/SRE for {company_name}.\n\nGoal: warm welcome + real stack detection for cloud infrastructure.\nTools: {tools}\nTeam stack: {team_stack}\nExpected level: {seniority}\n\nAsk about cloud provider, IaC, Kubernetes, CI/CD, observability.\nBe especially careful with security and production access.\nAt the end, generate JSON with stack_actual, stack_gaps, nivel_real_detectado, estilo_aprendizaje, expectativas, areas_enfasis, ticket_complexity, notas_para_manager."
+    },
+    {
+      "id": "backend-developer",
+      "name": "Backend Developer",
+      "icon": "⚙️",
+      "category": "dev",
+      "seniority_levels": ["junior", "mid", "senior", "lead"],
+      "stack_keywords": ["python", "fastapi", "nodejs", "express", "go", "java", "postgresql", "redis"],
+      "tools": {
+        "languages": ["Python", "Node.js", "Go", "Java", "Rust"],
+        "frameworks": ["FastAPI", "Express", "Django", "Gin", "Spring Boot"],
+        "databases": ["PostgreSQL", "MongoDB", "Redis", "DynamoDB", "MySQL"],
+        "api_patterns": ["REST", "GraphQL", "gRPC"],
+        "testing": ["pytest", "Jest", "Go test"],
+        "observability": ["Sentry", "Datadog APM", "OpenTelemetry"]
+      },
+      "access_rules": {
+        "junior": {
+          "github_repos": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#backend", "#general"],
+          "db_staging_read": "auto",
+          "db_staging_write": "blocked",
+          "postman_team": "auto",
+          "production": "blocked"
+        },
+        "mid": {
+          "github_repos": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#backend", "#api-design"],
+          "db_staging_read": "auto",
+          "db_staging_write": "auto",
+          "postman_team": "auto",
+          "sentry_read": "auto",
+          "staging_deploys": "auto",
+          "production": "blocked"
+        },
+        "senior": {
+          "github_repos": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#backend", "#api-design", "#architecture"],
+          "db_staging": "auto",
+          "db_prod_read": "auto",
+          "sentry": "auto",
+          "prod_deploys": "requires_approval",
+          "code_review_required": true
+        },
+        "lead": {
+          "github_repos": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#backend", "#api-design", "#architecture", "#oncall"],
+          "db_staging": "auto",
+          "db_prod": "auto",
+          "sentry": "auto",
+          "prod_deploys": "auto",
+          "architecture_decisions": true
+        }
+      },
+      "learning_sequence": [
+        "General architecture: services, how they communicate, what each one does",
+        "How to run the server locally: complete setup of environment variables and DB",
+        "How to make a test request: team's Postman collection",
+        "Code conventions: linting, formatting, error handling patterns",
+        "How to view logs: structured logging, what to look for when something fails",
+        "PR process: what they review, approval criteria, who does the review"
+      ],
+      "ticket_criteria": {
+        "junior": "Add validation for a missing field in an existing endpoint + the corresponding unit test. Touches real business code without risk. Time: 4-6 hours.",
+        "mid": "New small endpoint with its validation, business logic, and tests. May require a DB schema change. Time: 1 day.",
+        "senior": "Design and propose the technical solution for a new feature before implementing. Includes ADR if applicable. Time: 2-3 days.",
+        "lead": "Identify and propose performance or architecture improvements in the main service. Lead the implementation. Time: 1 week."
+      },
+      "interview_questions": {
+        "stack_detection": "What backend language and framework do you have the most recent experience with?",
+        "depth": "Have you designed APIs from scratch or mainly extended existing ones?",
+        "gap_detection": "The team works mainly with {team_stack}. Do you have experience with that?",
+        "learning_style": "Do you prefer to understand the data model first or the end-to-end request flow?",
+        "expectations": "What type of backend work are you most comfortable with — new features, performance optimization, or refactoring?",
+        "adaptive": "For {missing_tool}, have you worked with something similar that might help you ramp up faster?"
+      },
+      "lobster_trap_policy_file": "backend_dev.yaml",
+      "system_prompt_template": "You are the onboarding agent specialized in Backend Development for {company_name}.\n\nGoal: integrate the new backend dev by detecting their stack and gaps.\nTeam languages/frameworks: {tools}\nMain stack: {team_stack}\nExpected level: {seniority}\n\nAsk about languages, frameworks, API design, databases, and patterns.\nAt the end, generate JSON with stack_actual, stack_gaps, nivel_real_detectado, estilo_aprendizaje, expectativas, areas_enfasis, ticket_complexity, notas_para_manager."
+    },
+    {
+      "id": "ai-ml-engineer",
+      "name": "AI / ML Engineer",
+      "icon": "🤖",
+      "category": "ai",
+      "seniority_levels": ["junior", "mid", "senior"],
+      "stack_keywords": ["python", "pytorch", "huggingface", "langchain", "mlflow", "gemini", "openai"],
+      "tools": {
+        "frameworks": ["PyTorch", "TensorFlow", "JAX", "HuggingFace Transformers"],
+        "llm_tools": ["LangChain", "LangGraph", "LlamaIndex", "Gemini API", "OpenAI API"],
+        "mlops": ["MLflow", "Weights & Biases", "DVC", "Kubeflow"],
+        "vector_dbs": ["Pinecone", "Weaviate", "pgvector", "ChromaDB"],
+        "infra": ["GPU clusters", "CUDA", "vLLM", "Ollama", "TGI"],
+        "evaluation": ["RAGAS", "DeepEval", "LangSmith"]
+      },
+      "access_rules": {
+        "junior": {
+          "github_repos_experiments": "auto",
+          "jupyter_staging": "auto",
+          "datasets_anonymized": "auto",
+          "mlflow_read": "auto",
+          "gpu_staging": "requires_approval",
+          "prod_models": "blocked",
+          "raw_user_data": "blocked"
+        },
+        "mid": {
+          "github_repos_experiments": "auto",
+          "jupyter_staging": "auto",
+          "gpu_staging": "auto",
+          "mlflow_write": "auto",
+          "huggingface_team": "auto",
+          "datasets_anonymized": "auto",
+          "prod_models_read": "requires_approval",
+          "raw_user_data": "blocked"
+        },
+        "senior": {
+          "github_repos": "auto",
+          "gpu_staging": "auto",
+          "gpu_prod": "requires_approval",
+          "mlflow": "auto",
+          "prod_models_read": "auto",
+          "prod_models_write": "requires_approval",
+          "evaluation_data": "auto",
+          "raw_user_data": "blocked"
+        }
+      },
+      "learning_sequence": [
+        "AI system architecture: which models are in production, how they are served",
+        "Data pipeline: how data arrives, how it is processed, what is anonymized",
+        "How to run an experiment: MLflow, naming conventions, metrics logging",
+        "Evaluation stack: how models are evaluated before going to production",
+        "Model deployment process: required approvals, rollback procedure",
+        "Data and privacy policies: which data can be used for training and which cannot"
+      ],
+      "ticket_criteria": {
+        "junior": "Replicate an existing experiment with a different dataset and document the results in MLflow. Pure experimentation, no production access. Time: 1-2 days.",
+        "mid": "Improve the evaluation pipeline of an existing model: add a new metric or automate a manual test. Time: 2-3 days.",
+        "senior": "Review and propose improvements to the current RAG pipeline: identify where it is losing recall or precision. Include technical proposal. Time: 3-4 days."
+      },
+      "interview_questions": {
+        "stack_detection": "What is your experience with LLMs — have you worked more with fine-tuning, RAG/prompting, or model deployment/serving?",
+        "depth": "Have you taken ML models to production or is your experience mainly in research/experimentation?",
+        "gap_detection": "The team works mainly with {team_stack}. Have you used that before?",
+        "learning_style": "Do you prefer to start by understanding the business problem the model solves, or dive straight into the code?",
+        "expectations": "Which part of the ML lifecycle are you strongest in — data, modeling, evaluation, or deployment?",
+        "adaptive": "For {missing_tool}, have you worked with a similar tool that gives you a foundation to learn quickly?"
+      },
+      "lobster_trap_policy_file": "ai_engineer.yaml",
+      "system_prompt_template": "You are the onboarding agent specialized in AI/ML Engineering for {company_name}.\n\nGoal: onboard a new AI/ML engineer with emphasis on data security.\nTools: {tools}\nTeam stack: {team_stack}\nExpected level: {seniority}\n\nAsk about LLMs, MLOps, vector databases, evaluation, and deployment.\nBe very explicit about raw data access policies (always blocked).\nAt the end, generate JSON with stack_actual, stack_gaps, nivel_real_detectado, estilo_aprendizaje, expectativas, areas_enfasis, ticket_complexity, notas_para_manager."
+    },
+    {
+      "id": "frontend-developer",
+      "name": "Frontend Developer",
+      "icon": "🎨",
+      "category": "dev",
+      "seniority_levels": ["junior", "mid", "senior"],
+      "stack_keywords": ["react", "typescript", "vue", "nextjs", "tailwind", "figma", "storybook"],
+      "tools": {
+        "frameworks": ["React", "Vue", "Angular", "Next.js", "Svelte"],
+        "styling": ["Tailwind CSS", "CSS Modules", "Styled Components", "Sass"],
+        "state": ["Redux", "Zustand", "Jotai", "React Query", "Context API"],
+        "testing": ["Jest", "React Testing Library", "Vitest", "Playwright"],
+        "design": ["Figma", "Storybook", "Chromatic"],
+        "build": ["Vite", "Webpack", "Turbopack"]
+      },
+      "access_rules": {
+        "junior": {
+          "github_repos_frontend": "auto",
+          "figma_view": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#frontend", "#design-dev"],
+          "storybook": "auto",
+          "prod_api_keys": "blocked",
+          "staging_deploys": "requires_approval"
+        },
+        "mid": {
+          "github_repos_frontend": "auto",
+          "figma_edit": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#frontend", "#design-dev", "#releases"],
+          "storybook": "auto",
+          "vercel_preview": "auto",
+          "staging_deploys": "auto",
+          "prod_api_keys": "blocked"
+        },
+        "senior": {
+          "github_repos_frontend": "auto",
+          "figma": "auto",
+          "jira_board": "auto",
+          "slack_channels": ["#frontend", "#design-dev", "#releases", "#architecture"],
+          "storybook": "auto",
+          "vercel": "auto",
+          "prod_deploys": "requires_approval",
+          "design_system_admin": "auto"
+        }
+      },
+      "learning_sequence": [
+        "Component structure and design tokens of the design system",
+        "How to run the project locally and Storybook",
+        "How routing and state management work",
+        "Code conventions: naming, component structure, props typing",
+        "Code review process: what they review, how to connect with the design team",
+        "Deploy: how to create a preview deployment and the process to production"
+      ],
+      "ticket_criteria": {
+        "junior": "Update a UI component to support a new design system variant. Requires reading the design tokens and writing 1 snapshot test. Time: 3-5 hours.",
+        "mid": "Implement a new more complex component with its responsive variant, states, and tests. Connected to a real API. Time: 1-2 days.",
+        "senior": "Identify and resolve a performance issue in the bundle or re-renders of a critical component. Include benchmarks. Time: 2-3 days."
+      },
+      "interview_questions": {
+        "stack_detection": "What frontend framework do you have the most experience with — React, Vue, Angular, or another?",
+        "depth": "Have you worked with TypeScript deeply or mainly with lightly typed JavaScript?",
+        "gap_detection": "The team uses {team_stack}. Do you have experience with that?",
+        "learning_style": "Do you prefer to start by understanding the design system or go straight to how the frontend connects to the APIs?",
+        "expectations": "Which area of frontend are you strongest in — components/UI, state management, or performance/tooling?",
+        "adaptive": "For {missing_tool}, have you worked with something in the same category that gives you a foundation?"
+      },
+      "lobster_trap_policy_file": "frontend_dev.yaml",
+      "system_prompt_template": "You are the onboarding agent specialized in Frontend Development for {company_name}.\n\nGoal: integrate the new frontend dev by detecting their UI stack and TypeScript level.\nTools: {tools}\nTeam stack: {team_stack}\nExpected level: {seniority}\n\nAsk about frameworks, TypeScript, design systems, state management, and testing.\nAt the end, generate JSON with stack_actual, stack_gaps, nivel_real_detectado, estilo_aprendizaje, expectativas, areas_enfasis, ticket_complexity, notas_para_manager."
+    },
+    {
+      "id": "data-engineer",
+      "name": "Data Engineer",
+      "icon": "📊",
+      "category": "data",
+      "seniority_levels": ["junior", "mid", "senior"],
+      "stack_keywords": ["python", "dbt", "airflow", "spark", "snowflake", "bigquery", "kafka"],
+      "tools": {
+        "transformation": ["dbt", "Spark", "pandas", "Polars"],
+        "orchestration": ["Apache Airflow", "Prefect", "Dagster"],
+        "warehouses": ["Snowflake", "BigQuery", "Redshift", "DuckDB"],
+        "streaming": ["Kafka", "Kinesis", "Flink"],
+        "quality": ["Great Expectations", "dbt tests", "Monte Carlo"],
+        "visualization": ["Looker", "Metabase", "Superset"]
+      },
+      "access_rules": {
+        "junior": {
+          "github_repos_pipelines": "auto",
+          "warehouse_staging_read": "auto",
+          "airflow_ui_view": "auto",
+          "dbt_personal_env": "auto",
+          "datasets_anonymized": "auto",
+          "jira_board": "auto",
+          "warehouse_prod": "blocked",
+          "customer_data_raw": "blocked"
+        },
+        "mid": {
+          "github_repos_pipelines": "auto",
+          "warehouse_staging": "auto",
+          "airflow_ui": "auto",
+          "dbt_team": "auto",
+          "warehouse_prod_read": "requires_approval",
+          "jira_board": "auto",
+          "customer_data_anonymized": "auto",
+          "customer_data_raw": "blocked"
+        },
+        "senior": {
+          "github_repos_pipelines": "auto",
+          "warehouse_staging": "auto",
+          "warehouse_prod_read": "auto",
+          "warehouse_prod_write": "requires_approval",
+          "airflow_admin": "requires_approval",
+          "dbt_production": "requires_approval",
+          "customer_data_anonymized": "auto",
+          "customer_data_raw": "blocked"
+        }
+      },
+      "learning_sequence": [
+        "Data warehouse architecture: raw/staging/mart layers and their conventions",
+        "Most-used table catalog: what each one contains, who the owner is",
+        "How to run and test a dbt model locally: commands and naming conventions",
+        "How the main Airflow DAG works: what it orchestrates, SLAs, how to view logs",
+        "Data quality process: what tests exist, how to add new ones",
+        "Customer data access: privacy policy, what is anonymized and how"
+      ],
+      "ticket_criteria": {
+        "junior": "Add a data quality test to an existing dbt model: not_null, unique, accepted_values. Staging read-only. Time: 4-6 hours.",
+        "mid": "Create a new dbt model in the mart layer that answers a specific business question. Includes documentation and tests. Time: 1-2 days.",
+        "senior": "Identify and resolve a performance issue in a critical pipeline: optimize a slow dbt model or an inefficient Airflow DAG. Time: 2-3 days."
+      },
+      "interview_questions": {
+        "stack_detection": "What data transformation tool do you have the most experience with — dbt, Spark, pandas, or another?",
+        "depth": "Have you worked with streaming pipelines or mainly batch processing?",
+        "gap_detection": "The team mainly uses {team_stack}. Have you worked with that?",
+        "learning_style": "Do you prefer to understand the warehouse architecture first or go straight to how a pipeline is built?",
+        "expectations": "Which part of data work are you strongest in — pipelines, modeling, data quality, or visualization?",
+        "adaptive": "For {missing_tool}, do you have experience with similar tools that would help you ramp up quickly?"
+      },
+      "lobster_trap_policy_file": "data_engineer.yaml",
+      "system_prompt_template": "You are the onboarding agent specialized in Data Engineering for {company_name}.\n\nGoal: integrate the new data engineer by detecting their pipeline and data stack experience.\nTools: {tools}\nTeam stack: {team_stack}\nExpected level: {seniority}\n\nAsk about data transformation, orchestration, warehouses, and data quality.\nAt the end, generate JSON with stack_actual, stack_gaps, nivel_real_detectado, estilo_aprendizaje, expectativas, areas_enfasis, ticket_complexity, notas_para_manager."
+    }
+  ]
+}

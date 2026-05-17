@@ -1,0 +1,97 @@
+version: "1.0"
+name: "AI/ML Engineer Policy - STRICT DATA GOVERNANCE"
+description: "Strict rules for AI/ML access — raw user data always blocked, GPU prod requires approval"
+
+rules:
+  - name: "block_raw_user_data_always"
+    priority: 1
+    match:
+      resource:
+        - "raw_user_data"
+        - "customer_data_raw"
+        - "pii_dataset"
+        - "unmasked_data"
+    action: DENY
+    message: "Raw user data is NEVER accessible during onboarding regardless of seniority. Use anonymized datasets only."
+    notify: "data-privacy-officer"
+    severity: CRITICAL
+
+  - name: "block_prod_model_write_junior_mid"
+    priority: 2
+    match:
+      resource:
+        - "prod_models_write"
+        - "production_model_deploy"
+      session_seniority:
+        - junior
+        - mid
+    action: DENY
+    message: "Junior/mid ML engineers cannot deploy or modify production models"
+    notify: "ml-lead"
+    severity: CRITICAL
+
+  - name: "human_review_prod_model_write_senior"
+    priority: 3
+    match:
+      resource: "prod_models_write"
+      session_seniority: "senior"
+    action: HUMAN_REVIEW
+    reviewer: "ml-lead"
+    timeout_minutes: 120
+    message: "Production model changes require ML lead approval"
+    severity: HIGH
+
+  - name: "block_gpu_prod_junior"
+    priority: 4
+    match:
+      resource: "gpu_prod"
+      session_seniority: "junior"
+    action: DENY
+    message: "Junior ML engineers cannot access production GPU clusters"
+    severity: HIGH
+
+  - name: "requires_approval_gpu_prod_mid"
+    priority: 5
+    match:
+      resource: "gpu_prod"
+      session_seniority: "mid"
+    action: HUMAN_REVIEW
+    reviewer: "ml-lead"
+    timeout_minutes: 60
+    severity: HIGH
+
+  - name: "redact_model_prompts_pii"
+    priority: 6
+    match:
+      has_pii: true
+      pii_types:
+        - email
+        - phone
+        - name
+        - address
+        - ssn
+    action: REDACT
+    replacement: "[REDACTED-PII]"
+    severity: MEDIUM
+
+  - name: "log_experiment_data_access"
+    priority: 7
+    match:
+      resource_type: "dataset"
+    action: LOG
+    severity: MEDIUM
+
+  - name: "block_external_model_upload"
+    priority: 8
+    match:
+      intent_category: "external_model_upload"
+    action: DENY
+    message: "Models must go through the official MLflow review process before deployment"
+    severity: HIGH
+
+  - name: "log_all_access_requests"
+    priority: 10
+    match:
+      event_type: "access_request"
+    action: LOG
+    severity: LOW

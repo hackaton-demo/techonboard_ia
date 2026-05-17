@@ -1,0 +1,73 @@
+version: "1.0"
+name: "QA Engineer Policy"
+description: "Security rules for QA Engineer onboarding sessions"
+
+rules:
+  - name: "block_production_credentials"
+    priority: 1
+    match:
+      content_contains:
+        - "production database"
+        - "prod credentials"
+        - "prod API key"
+        - "production secret"
+    action: DENY
+    message: "Production credentials cannot be accessed during QA onboarding"
+    severity: HIGH
+
+  - name: "redact_pii_in_prompts"
+    priority: 2
+    match:
+      has_pii: true
+      pii_types:
+        - email
+        - phone
+        - ssn
+        - address
+        - full_name
+    action: REDACT
+    replacement: "[REDACTED-PII]"
+    severity: MEDIUM
+
+  - name: "block_prod_for_junior"
+    priority: 3
+    match:
+      resource_type: "production"
+      session_seniority: "junior"
+    action: DENY
+    message: "Junior QA engineers cannot access production environments"
+    notify: "engineering-manager"
+    severity: HIGH
+
+  - name: "human_review_senior_prod"
+    priority: 4
+    match:
+      resource_type: "production"
+      session_seniority: "senior"
+    action: HUMAN_REVIEW
+    reviewer: "engineering-manager"
+    timeout_minutes: 60
+    severity: MEDIUM
+
+  - name: "log_confidential_disclosure"
+    priority: 5
+    match:
+      intent_category: "confidential_disclosure"
+    action: LOG
+    severity: HIGH
+    notify: "legal@company.com"
+
+  - name: "block_infra_access"
+    priority: 6
+    match:
+      resource_type: "infrastructure"
+    action: DENY
+    message: "QA Engineers do not require direct infrastructure access"
+    severity: MEDIUM
+
+  - name: "log_all_access_requests"
+    priority: 10
+    match:
+      event_type: "access_request"
+    action: LOG
+    severity: LOW

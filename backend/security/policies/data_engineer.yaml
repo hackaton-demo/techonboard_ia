@@ -1,0 +1,66 @@
+version: "1.0"
+name: "Data Engineer Policy"
+description: "Security rules for Data Engineer onboarding — customer data protection"
+
+rules:
+  - name: "block_customer_data_raw_always"
+    priority: 1
+    match:
+      resource:
+        - "customer_data_raw"
+        - "raw_customer_pii"
+        - "unmasked_customer_records"
+    action: DENY
+    message: "Raw customer data is never accessible during onboarding. Use anonymized datasets."
+    notify: "data-privacy-officer"
+    severity: CRITICAL
+
+  - name: "block_warehouse_prod_write_junior_mid"
+    priority: 2
+    match:
+      resource:
+        - "warehouse_prod_write"
+        - "dbt_production"
+      session_seniority:
+        - junior
+        - mid
+    action: DENY
+    message: "Production warehouse writes require senior approval"
+    notify: "data-lead"
+    severity: CRITICAL
+
+  - name: "human_review_airflow_admin"
+    priority: 3
+    match:
+      resource: "airflow_admin"
+    action: HUMAN_REVIEW
+    reviewer: "data-lead"
+    timeout_minutes: 60
+    severity: HIGH
+
+  - name: "redact_pii"
+    priority: 4
+    match:
+      has_pii: true
+      pii_types:
+        - email
+        - phone
+        - ssn
+        - address
+    action: REDACT
+    replacement: "[REDACTED-PII]"
+    severity: MEDIUM
+
+  - name: "log_data_access"
+    priority: 5
+    match:
+      resource_type: "dataset"
+    action: LOG
+    severity: MEDIUM
+
+  - name: "log_all_access_requests"
+    priority: 10
+    match:
+      event_type: "access_request"
+    action: LOG
+    severity: LOW

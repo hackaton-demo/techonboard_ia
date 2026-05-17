@@ -1,0 +1,32 @@
+version: "3.9"
+# Lobster Trap — standalone compose para el proxy de seguridad de IA.
+# Usar cuando se quiere levantar solo el proxy sin el stack completo.
+#
+# Uso:
+#   cd lobster-trap
+#   docker-compose up -d
+#
+# O desde la raiz con el profile:
+#   docker-compose --profile lobster up -d lobster-trap
+
+services:
+  lobster-trap:
+    image: nginx:alpine
+    # TODO: reemplazar con la imagen real de Lobster Trap cuando este disponible
+    container_name: lobster-trap
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    environment:
+      - NGINX_ENVSUBST_TEMPLATE_SUFFIX=.template
+    labels:
+      - "com.techonboard.service=lobster-trap"
+      - "com.techonboard.description=AI Security Proxy — Gemini API gateway with policy enforcement"

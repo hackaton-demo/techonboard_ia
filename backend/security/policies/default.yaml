@@ -1,0 +1,46 @@
+version: "1.0"
+name: "Default Policy"
+description: "Baseline policy: redact PII and log everything"
+
+rules:
+  - name: "redact_all_pii"
+    priority: 1
+    match:
+      has_pii: true
+      pii_types:
+        - email
+        - phone
+        - ssn
+        - credit_card
+        - address
+        - full_name
+        - date_of_birth
+        - passport
+        - national_id
+    action: REDACT
+    replacement: "[REDACTED-PII]"
+    severity: MEDIUM
+
+  - name: "deny_production_access_any"
+    priority: 2
+    match:
+      resource_type: "production"
+      session_seniority:
+        - junior
+    action: DENY
+    message: "Production access denied for junior level during onboarding"
+    severity: HIGH
+
+  - name: "log_confidential_disclosure"
+    priority: 3
+    match:
+      intent_category: "confidential_disclosure"
+    action: LOG
+    severity: HIGH
+
+  - name: "log_all_events"
+    priority: 100
+    match:
+      event_type: "*"
+    action: LOG
+    severity: LOW
