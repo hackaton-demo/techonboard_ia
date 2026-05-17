@@ -92,6 +92,7 @@ async def provision_access(state: OnboardingState, db: AsyncSession) -> Onboardi
         return {**state, "access_status": access_status}
     except Exception as exc:
         logger.error(f"provision_access failed: {exc}")
+        await db.rollback()
         errors = state.get("errors", [])
         return {**state, "access_status": {}, "errors": errors + [f"access_provision: {exc}"]}
 
@@ -157,12 +158,14 @@ async def assign_ticket(state: OnboardingState) -> OnboardingState:
 
 
 async def generate_plan(state: OnboardingState, db: AsyncSession) -> OnboardingState:
-    """Node 5: Generate the 14-day onboarding plan with Gemini Pro."""
+    """Node 5: Generate the 7-day onboarding plan with Gemini."""
     logger.info(f"[Orchestrator] generate_plan for session {state['session_id']}")
     try:
         plan = await _build_14_day_plan(state)
 
-        # Persist plan and ticket to DB
+        # Rollback any aborted transaction left by previous nodes before querying
+        await db.rollback()
+
         from models.onboarding import OnboardingSession
 
         result = await db.execute(
@@ -195,7 +198,7 @@ async def _build_14_day_plan(state: OnboardingState) -> dict[str, Any]:
     try:
         genai.configure(api_key=settings.GOOGLE_API_KEY)
         model = genai.GenerativeModel(
-            "gemini-2.0-flash-exp",
+            "gemini-2.0-flash",
             generation_config=genai.GenerationConfig(
                 max_output_tokens=900,
                 temperature=0.7,

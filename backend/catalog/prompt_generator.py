@@ -56,7 +56,7 @@ async def generate_system_prompt(
 
     try:
         genai.configure(api_key=settings.GOOGLE_API_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        model = genai.GenerativeModel("gemini-2.0-flash")
 
         filled_prompt = _PROMPT_TEMPLATE.format(
             agent_name=agent_data.get("name", "Custom Agent"),

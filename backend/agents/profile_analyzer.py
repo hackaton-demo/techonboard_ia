@@ -146,7 +146,7 @@ class ProfileAnalyzer:
 
         try:
             model = genai.GenerativeModel(
-                "gemini-2.0-flash-exp",
+                "gemini-2.0-flash",
                 system_instruction=system_prompt,
             )
             chat = model.start_chat()

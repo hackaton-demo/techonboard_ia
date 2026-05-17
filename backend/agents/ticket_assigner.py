@@ -41,7 +41,7 @@ class TicketAssigner:
             return self._simple_fallback(jira_tickets, seniority)
 
         try:
-            model = genai.GenerativeModel("gemini-2.0-flash-exp")
+            model = genai.GenerativeModel("gemini-2.0-flash")
 
             tickets_json = json.dumps(jira_tickets, ensure_ascii=False, indent=2)
             profile_json = json.dumps(interview_profile, ensure_ascii=False, indent=2)

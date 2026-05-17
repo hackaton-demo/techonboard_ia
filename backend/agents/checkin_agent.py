@@ -51,7 +51,7 @@ class CheckinAgent:
             return self._default_message(username, day)
 
         try:
-            model = genai.GenerativeModel("gemini-2.0-flash-exp")
+            model = genai.GenerativeModel("gemini-2.0-flash")
 
             prompt = f"""
 You are the TechOnboard onboarding agent generating a check-in for day {day}.

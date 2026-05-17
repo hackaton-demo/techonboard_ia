@@ -104,12 +104,12 @@ export function Interview() {
       setIsTyping(false)
       setInterviewDone(true)
     } else if (msg.type === 'plan_ready') {
-      navigate(`/plan/${sessionId}`)
+      setIsAnalyzing(false)
     } else if (msg.type === 'error') {
       currentStreamingIdRef.current = null
       setIsTyping(false)
     }
-  }, [lastMessage, navigate, sessionId])
+  }, [lastMessage])
 
   // Show typing indicator when agent starts responding
   const handleSend = useCallback(() => {

@@ -74,7 +74,7 @@ class CodebaseNavigator:
 
         try:
             model = genai.GenerativeModel(
-                "gemini-2.0-flash-exp",
+                "gemini-2.0-flash",
                 generation_config=genai.GenerationConfig(max_output_tokens=600),
             )
             prompt = f"""
