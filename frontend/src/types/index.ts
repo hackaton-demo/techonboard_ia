@@ -110,6 +110,7 @@ export interface PaymentRequest {
   network: string;
   expires_at: string;
   memo?: string;
+  payment_url?: string;
 }
 
 export interface DashboardStats {
