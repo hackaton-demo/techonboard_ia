@@ -129,6 +129,15 @@ export function Interview() {
     inputRef.current?.focus()
   }, [input, sendMessage])
 
+  // Auto-navigate to plan after 3 s if analysis is still pending
+  useEffect(() => {
+    if (!isAnalyzing || !sessionId) return
+    const timer = setTimeout(() => {
+      navigate(`/plan/${sessionId}`)
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [isAnalyzing, sessionId, navigate])
+
   const agentName = session?.agent_name ?? 'Agent'
   const agentEmoji = session?.agent_emoji ?? '🤖'
   const seniority = session?.seniority ?? ''
