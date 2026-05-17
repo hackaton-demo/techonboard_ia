@@ -42,10 +42,73 @@ class OnboardingStatusResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class OnboardingPlanResponse(BaseModel):
+class PlanDayOut(BaseModel):
+    day: int
+    title: str
+    description: str
+    tasks: list[str]
+    is_checkin: bool
+    completed: bool = False
+
+
+class PlanResponse(BaseModel):
     session_id: str
-    status: str
-    onboarding_plan: dict[str, Any] | None
+    dev_email: str
+    agent_name: str
+    agent_emoji: str
+    seniority: str
+    days: list[PlanDayOut]
+    accesses: list[dict[str, Any]]
+    ticket: dict[str, Any] | None
+    checkin_days: list[int]
+    generated_at: str
+
+
+def _build_plan_response(
+    session: OnboardingSession,
+    agent: AgentProfile | None,
+) -> PlanResponse:
+    """Transform the raw onboarding_plan JSON into the shape the frontend expects."""
+    raw: dict[str, Any] = session.onboarding_plan or {}
+    checkin_days = [3, 7, 14]
+
+    # Flatten weeks → days
+    days: list[PlanDayOut] = []
+    for week in raw.get("weeks", []):
+        for d in week.get("days", []):
+            day_num = d.get("day", len(days) + 1)
+            tasks = list(d.get("objectives", [])) + list(d.get("activities", []))
+            description = d.get("deliverable", "")
+            days.append(PlanDayOut(
+                day=day_num,
+                title=d.get("title", f"Day {day_num}"),
+                description=description,
+                tasks=tasks,
+                is_checkin=day_num in checkin_days,
+            ))
+
+    # Build accesses from session.access_status
+    accesses: list[dict[str, Any]] = []
+    for name, info in (session.access_status or {}).items():
+        accesses.append({
+            "name": name.capitalize(),
+            "resource": info.get("url", name),
+            "state": info.get("status", "requires_approval"),
+            "via_lobster_trap": True,
+        })
+
+    return PlanResponse(
+        session_id=str(session.id),
+        dev_email=session.dev_email or "",
+        agent_name=agent.name if agent else "Agent",
+        agent_emoji=agent.icon if agent else "🤖",
+        seniority=session.seniority,
+        days=days,
+        accesses=accesses,
+        ticket=None,
+        checkin_days=checkin_days,
+        generated_at=session.created_at.isoformat(),
+    )
 
 
 async def _resolve_agent(db: AsyncSession, agent_id: str) -> AgentProfile | None:
@@ -204,12 +267,12 @@ async def delete_onboarding(
     logger.info(f"Deleted onboarding session {session_id}")
 
 
-@router.get("/{session_id}/plan", response_model=OnboardingPlanResponse)
+@router.get("/{session_id}/plan", response_model=PlanResponse)
 async def get_onboarding_plan(
     session_id: str,
     db: AsyncSession = Depends(get_db),
-) -> OnboardingPlanResponse:
-    """Get the generated 14-day onboarding plan for a session."""
+) -> PlanResponse:
+    """Get the generated onboarding plan for a session, shaped for the frontend."""
     try:
         uid = uuid.UUID(session_id)
     except ValueError:
@@ -226,8 +289,15 @@ async def get_onboarding_plan(
             detail=f"Session {session_id} not found",
         )
 
-    return OnboardingPlanResponse(
-        session_id=str(session.id),
-        status=session.status,
-        onboarding_plan=session.onboarding_plan,
-    )
+    if not session.onboarding_plan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Plan not yet generated for this session",
+        )
+
+    agent = None
+    if session.agent_profile_id:
+        r = await db.execute(select(AgentProfile).where(AgentProfile.id == session.agent_profile_id))
+        agent = r.scalar_one_or_none()
+
+    return _build_plan_response(session, agent)

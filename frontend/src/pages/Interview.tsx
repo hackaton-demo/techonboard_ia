@@ -23,8 +23,9 @@ export function Interview() {
   const [messages, setMessages] = useState<InterviewMessage[]>([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [interviewComplete, setInterviewComplete] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [interviewDone, setInterviewDone] = useState(false)
+  const [planReady, setPlanReady] = useState(false)
   const currentStreamingIdRef = useRef<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -84,7 +85,7 @@ export function Interview() {
         prev.map((m) => (m.streaming ? { ...m, streaming: false } : m))
       )
       setIsTyping(false)
-      setInterviewDone(true)
+      setInterviewComplete(true)
       setIsAnalyzing(true)
     } else if (msg.type === 'status') {
       currentStreamingIdRef.current = null
@@ -93,8 +94,8 @@ export function Interview() {
       )
       const statusVal = msg.message ?? msg.status ?? ''
       if (statusVal === 'starting_provisioning' || statusVal === 'provisioning' || statusVal === 'active') {
+        setInterviewComplete(true)
         setIsAnalyzing(true)
-        setInterviewDone(true)
       }
     } else if (msg.type === 'done') {
       currentStreamingIdRef.current = null
@@ -102,16 +103,16 @@ export function Interview() {
         prev.map((m) => (m.streaming ? { ...m, streaming: false } : m))
       )
       setIsTyping(false)
-      setInterviewDone(true)
+      setInterviewComplete(true)
     } else if (msg.type === 'plan_ready') {
       setIsAnalyzing(false)
+      setPlanReady(true)
     } else if (msg.type === 'error') {
       currentStreamingIdRef.current = null
       setIsTyping(false)
     }
   }, [lastMessage])
 
-  // Show typing indicator when agent starts responding
   const handleSend = useCallback(() => {
     const text = input.trim()
     if (!text) return
@@ -170,30 +171,59 @@ export function Interview() {
               )}
             </div>
 
-            {/* Ver Plan button */}
-            {interviewDone && (
+            {/* Plan button — appears after interview is complete */}
+            {interviewComplete && (
               <button
                 onClick={() => navigate(`/plan/${sessionId}`)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors"
+                disabled={isAnalyzing}
+                className={clsx(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                  planReady
+                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                    : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                )}
               >
-                View my Plan
-                <ArrowRight size={14} />
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Generating plan...
+                  </>
+                ) : (
+                  <>
+                    View my Plan
+                    <ArrowRight size={14} />
+                  </>
+                )}
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Analyzing State */}
+      {/* Analyzing banner */}
       {isAnalyzing && (
         <div className="mx-6 mt-4 p-4 rounded-xl bg-indigo-900/20 border border-indigo-500/30 flex items-center gap-3">
           <Loader2 size={18} className="animate-spin text-indigo-400 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-indigo-300">Analyzing your profile...</p>
             <p className="text-xs text-indigo-400/70 mt-0.5">
-              Generating your personalized onboarding plan
+              Generating your personalized onboarding plan — you can still add context below
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Plan ready banner */}
+      {planReady && (
+        <div className="mx-6 mt-4 p-4 rounded-xl bg-emerald-900/20 border border-emerald-500/30 flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-emerald-300">Your plan is ready!</p>
+          <button
+            onClick={() => navigate(`/plan/${sessionId}`)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-colors"
+          >
+            View my Plan
+            <ArrowRight size={14} />
+          </button>
         </div>
       )}
 
@@ -207,70 +237,55 @@ export function Interview() {
         />
       </div>
 
-      {/* Input Area — also visible while analyzing so user can add context */}
-      {(!interviewDone || isAnalyzing) && (
-        <div className="px-4 py-4 border-t border-gray-800 bg-gray-950/80">
-          <div className="flex gap-3 items-end">
-            <div className="flex-1 relative">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSend()
-                  }
-                }}
-                placeholder={
-                  !isConnected ? 'Waiting for connection...'
-                  : isAnalyzing ? 'Add extra context for your plan...'
-                  : 'Type your answer...'
+      {/* Input Area — always visible */}
+      <div className="px-4 py-4 border-t border-gray-800 bg-gray-950/80">
+        <div className="flex gap-3 items-end">
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSend()
                 }
-                disabled={!isConnected || isTyping}
-                className={clsx(
-                  'w-full px-4 py-3 bg-gray-800 border rounded-xl text-sm text-gray-200',
-                  'focus:outline-none transition-colors',
-                  'placeholder:text-gray-600',
-                  isConnected && !isTyping
-                    ? 'border-gray-700 focus:border-indigo-500'
-                    : 'border-gray-800 opacity-60 cursor-not-allowed'
-                )}
-              />
-            </div>
-            <button
-              onClick={handleSend}
-              disabled={!isConnected || !input.trim() || isTyping}
+              }}
+              placeholder={
+                !isConnected ? 'Waiting for connection...'
+                : isAnalyzing ? 'Add extra context for your plan...'
+                : interviewComplete ? 'Ask a follow-up question...'
+                : 'Type your answer...'
+              }
+              disabled={!isConnected || isTyping}
               className={clsx(
-                'p-3 rounded-xl transition-all duration-200 flex-shrink-0',
-                isConnected && input.trim() && !isTyping
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                  : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                'w-full px-4 py-3 bg-gray-800 border rounded-xl text-sm text-gray-200',
+                'focus:outline-none transition-colors',
+                'placeholder:text-gray-600',
+                isConnected && !isTyping
+                  ? 'border-gray-700 focus:border-indigo-500'
+                  : 'border-gray-800 opacity-60 cursor-not-allowed'
               )}
-            >
-              <Send size={18} />
-            </button>
+            />
           </div>
-          <p className="text-xs text-gray-700 mt-2 text-center">
-            Press Enter to send · Shift+Enter for new line
-          </p>
-        </div>
-      )}
-
-      {/* Interview Done Footer */}
-      {interviewDone && !isAnalyzing && (
-        <div className="px-4 py-4 border-t border-gray-800 bg-gray-950/80 text-center">
-          <p className="text-sm text-gray-500 mb-3">Interview completed</p>
           <button
-            onClick={() => navigate(`/plan/${sessionId}`)}
-            className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium flex items-center gap-2 mx-auto transition-colors"
+            onClick={handleSend}
+            disabled={!isConnected || !input.trim() || isTyping}
+            className={clsx(
+              'p-3 rounded-xl transition-all duration-200 flex-shrink-0',
+              isConnected && input.trim() && !isTyping
+                ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+            )}
           >
-            View my Onboarding Plan
-            <ArrowRight size={16} />
+            <Send size={18} />
           </button>
         </div>
-      )}
+        <p className="text-xs text-gray-700 mt-2 text-center">
+          Press Enter to send · Shift+Enter for new line
+        </p>
+      </div>
     </div>
   )
 }
