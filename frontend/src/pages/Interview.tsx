@@ -103,11 +103,13 @@ export function Interview() {
       )
       setIsTyping(false)
       setInterviewDone(true)
+    } else if (msg.type === 'plan_ready') {
+      navigate(`/plan/${sessionId}`)
     } else if (msg.type === 'error') {
       currentStreamingIdRef.current = null
       setIsTyping(false)
     }
-  }, [lastMessage])
+  }, [lastMessage, navigate, sessionId])
 
   // Show typing indicator when agent starts responding
   const handleSend = useCallback(() => {
@@ -128,15 +130,6 @@ export function Interview() {
     sendMessage({ type: 'message', content: text })
     inputRef.current?.focus()
   }, [input, sendMessage])
-
-  // Auto-navigate to plan after 3 s if analysis is still pending
-  useEffect(() => {
-    if (!isAnalyzing || !sessionId) return
-    const timer = setTimeout(() => {
-      navigate(`/plan/${sessionId}`)
-    }, 3000)
-    return () => clearTimeout(timer)
-  }, [isAnalyzing, sessionId, navigate])
 
   const agentName = session?.agent_name ?? 'Agent'
   const agentEmoji = session?.agent_emoji ?? '🤖'
@@ -214,8 +207,8 @@ export function Interview() {
         />
       </div>
 
-      {/* Input Area */}
-      {!interviewDone && (
+      {/* Input Area — also visible while analyzing so user can add context */}
+      {(!interviewDone || isAnalyzing) && (
         <div className="px-4 py-4 border-t border-gray-800 bg-gray-950/80">
           <div className="flex gap-3 items-end">
             <div className="flex-1 relative">
@@ -230,7 +223,11 @@ export function Interview() {
                     handleSend()
                   }
                 }}
-                placeholder={isConnected ? 'Type your answer...' : 'Waiting for connection...'}
+                placeholder={
+                  !isConnected ? 'Waiting for connection...'
+                  : isAnalyzing ? 'Add extra context for your plan...'
+                  : 'Type your answer...'
+                }
                 disabled={!isConnected || isTyping}
                 className={clsx(
                   'w-full px-4 py-3 bg-gray-800 border rounded-xl text-sm text-gray-200',

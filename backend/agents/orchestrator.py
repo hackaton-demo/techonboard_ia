@@ -194,7 +194,13 @@ async def _build_14_day_plan(state: OnboardingState) -> dict[str, Any]:
 
     try:
         genai.configure(api_key=settings.GOOGLE_API_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        model = genai.GenerativeModel(
+            "gemini-2.0-flash-exp",
+            generation_config=genai.GenerationConfig(
+                max_output_tokens=900,
+                temperature=0.7,
+            ),
+        )
 
         agent_name = state["agent_profile"].get("name", "Developer")
         seniority = state["seniority"]
@@ -202,39 +208,38 @@ async def _build_14_day_plan(state: OnboardingState) -> dict[str, Any]:
         ticket = state.get("assigned_ticket") or {}
 
         prompt = f"""
-Generate a 14-day onboarding plan for a {seniority} {agent_name}.
+Generate a 7-day onboarding plan for a {seniority} {agent_name}. Be concise.
 
 PROFILE:
-- Current stack: {interview.get("stack_actual", [])}
+- Stack: {interview.get("stack_actual", [])}
 - Gaps: {interview.get("stack_gaps", [])}
 - Learning style: {interview.get("estilo_aprendizaje", "mixed")}
-- First ticket: {ticket.get("summary", "Not assigned")} ({ticket.get("id", "N/A")})
+- First ticket: {ticket.get("summary", "Not assigned")}
 
-TEAM LEARNING SEQUENCE:
-{chr(10).join(f"- {s}" for s in state["agent_profile"].get("learning_sequence", []))}
+LEARNING SEQUENCE: {state["agent_profile"].get("learning_sequence", [])}
 
-Generate a structured plan in JSON with:
+Reply ONLY with valid JSON, no markdown:
 {{
   "title": "Onboarding Plan - {agent_name} {seniority}",
-  "duration_days": 14,
+  "duration_days": 7,
   "weeks": [
     {{
       "week": 1,
-      "theme": "Week theme",
+      "theme": "First week theme",
       "days": [
         {{
           "day": 1,
           "title": "Day title",
-          "objectives": ["objective 1", "objective 2"],
-          "activities": ["activity 1", "activity 2"],
-          "deliverable": "what should be ready at the end of the day"
+          "objectives": ["obj 1"],
+          "activities": ["activity 1"],
+          "deliverable": "deliverable"
         }}
       ]
     }}
   ],
   "success_metrics": ["metric 1", "metric 2"],
-  "key_contacts": ["person_role_1", "person_role_2"],
-  "resources": ["resource 1", "resource 2"]
+  "key_contacts": ["Tech Lead", "Buddy"],
+  "resources": ["resource 1"]
 }}
 """
         response = await model.generate_content_async(prompt)

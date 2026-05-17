@@ -73,7 +73,10 @@ class CodebaseNavigator:
             return self._mock_tour(learning_sequence, seniority)
 
         try:
-            model = genai.GenerativeModel("gemini-2.0-flash-exp")
+            model = genai.GenerativeModel(
+                "gemini-2.0-flash-exp",
+                generation_config=genai.GenerationConfig(max_output_tokens=600),
+            )
             prompt = f"""
 You are a senior engineer generating the personalised codebase tour for a new {seniority} developer.
 

@@ -1,7 +1,8 @@
 """
 WebSocket endpoint for the real-time Gemini interview.
 Streams tokens to the frontend as they are generated.
-After the interview completes, triggers the onboarding pipeline in background.
+After the interview completes, keeps the WebSocket open so the user can
+send extra context while the onboarding pipeline runs in the background.
 """
 
 import asyncio
@@ -9,8 +10,7 @@ import json
 import logging
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 
 from models.database import AsyncSessionLocal
@@ -31,6 +31,8 @@ async def interview_websocket(
     """Stream the Gemini interview to the frontend via WebSocket."""
     await websocket.accept()
     logger.info(f"WebSocket connected for interview session {session_id}")
+
+    interview_ok = False
 
     async with AsyncSessionLocal() as db:
         try:
@@ -136,6 +138,8 @@ async def interview_websocket(
                 json.dumps({"type": "status", "message": "starting_provisioning"})
             )
 
+            interview_ok = True
+
         except WebSocketDisconnect:
             logger.info(f"WebSocket disconnected for session {session_id}")
             return
@@ -147,9 +151,40 @@ async def interview_websocket(
                 )
             except Exception:
                 pass
+            return
 
-    # Run the onboarding pipeline in a separate task after WebSocket closes
-    asyncio.create_task(_run_pipeline_background(session_id))
+    if not interview_ok:
+        return
+
+    # Run pipeline in background with its own DB session
+    pipeline_task = asyncio.create_task(_run_pipeline_background(session_id))
+
+    # Keep WebSocket open so the user can add context while the plan generates
+    while not pipeline_task.done():
+        try:
+            raw = await asyncio.wait_for(websocket.receive_text(), timeout=2.0)
+            try:
+                data = json.loads(raw)
+                if data.get("type") == "message" and data.get("content"):
+                    await websocket.send_text(json.dumps({
+                        "type": "token",
+                        "content": "Got it! I'll take that into account for your plan. ",
+                    }))
+            except Exception:
+                pass
+        except asyncio.TimeoutError:
+            continue
+        except WebSocketDisconnect:
+            logger.info(f"Client disconnected during provisioning for {session_id}")
+            return
+        except Exception:
+            break
+
+    # Notify frontend that the plan is ready
+    try:
+        await websocket.send_text(json.dumps({"type": "plan_ready"}))
+    except Exception:
+        pass
 
 
 async def _run_pipeline_background(session_id: str) -> None:

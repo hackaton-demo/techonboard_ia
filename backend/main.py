@@ -46,6 +46,11 @@ async def lifespan(app: FastAPI):
         logger.error(f"Agent seeding failed: {exc}")
 
     logger.info(f"TechOnboard running in {settings.ENVIRONMENT} mode")
+    logger.info(
+        f"MOCK_MODE={settings.MOCK_MODE} | "
+        f"GOOGLE_API_KEY={'SET (len=%d)' % len(settings.GOOGLE_API_KEY) if settings.GOOGLE_API_KEY else 'EMPTY'} | "
+        f"KEY_STARTS_WITH={repr(settings.GOOGLE_API_KEY[:6]) if settings.GOOGLE_API_KEY else 'N/A'}"
+    )
     yield
 
     logger.info("Shutting down TechOnboard backend")
