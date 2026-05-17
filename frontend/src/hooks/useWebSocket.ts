@@ -30,8 +30,13 @@ export function useWebSocket(path: string): UseWebSocketReturn {
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return
 
+    const backendHost = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace(/^https?:\/\//, '')
+      : import.meta.env.PROD
+      ? 'techonboardia-production.up.railway.app'
+      : window.location.host
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsUrl = `${protocol}//${window.location.host}/ws/${pathRef.current}`
+    const wsUrl = `${protocol}//${backendHost}/ws/${pathRef.current}`
     setStatus('connecting')
 
     try {
